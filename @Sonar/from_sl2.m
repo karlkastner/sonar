@@ -80,6 +80,7 @@ function obj = from_sl2(obj, ifilename, echoflag, t0, FileID, nmax)
 	    pos0 = stream.pos;
 
 	    stream.skip(26);
+
 	    % stage 1: parse blocksize
 	    while (~stream.end())
 	    	idx=idx+1;
@@ -99,10 +100,14 @@ function obj = from_sl2(obj, ifilename, echoflag, t0, FileID, nmax)
 	    % stage 2: get block data
 	    block = zeros(length(obj.blocksize),max(obj.blocksize),'uint8');
 	    stream.pos = pos0;
-	    for idx=1:length(obj.blocksize)
-	    	block(idx,:) = stream.read(obj.blocksize(idx));
-	    end
 
+	    for idx=1:length(obj.blocksize)
+		bi = stream.read(obj.blocksize(idx));
+	    	block(idx,1:length(bi)) = bi;
+		if (mod(idx,1000)==0)
+			idx/length(obj.blocksize)
+		end
+	    end
 	    % extract the fields
 	    % 0
 	    %obj.offset       =   stream.read_int16() ...
@@ -155,6 +160,7 @@ function obj = from_sl2(obj, ifilename, echoflag, t0, FileID, nmax)
 	    obj.unknown18     = block(:,132+(1:2)); 	% 0
 	    obj.unknown19     = block(:,134+(1:4)); 	% flags
 	    obj.TimeOffset    = block(:,138+(1:4)); 
+	    obj.ECHO          = block(:,143:end);
 	else % of if 1
 		obj = read_individually(obj);
 	end
